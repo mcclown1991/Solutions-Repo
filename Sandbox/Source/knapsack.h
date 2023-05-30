@@ -6,12 +6,12 @@
 namespace knapsack {
     class Solution {
     public:
-        int max(int a, int b) { return (a > b) ? a : b; }
+        size_t max(size_t a, size_t b) { return (a > b) ? a : b; }
 
-        int knapSack(int W, std::vector<int> const& wt, std::vector<int> const& val, int n)
+        size_t knapSack(size_t W, std::vector<size_t> const& wt, std::vector<size_t> const& val, size_t n)
         {
-            int i, w;
-            std::vector<std::vector<int>> K(n + 1, std::vector<int>(W + 1));
+            size_t i, w;
+            std::vector<std::vector<size_t>> K(n + 1, std::vector<size_t>(W + 1));
 
             // Build table K[][] in bottom up manner
             for (i = 0; i <= n; i++) {
@@ -29,17 +29,37 @@ namespace knapsack {
             return K[n][W];
         }
 
-        int execute(int w, std::vector<int> const& wt, std::vector<int> const& val, int n) {
-            return knapSack(w, wt, val, n);
+        size_t knapSackSpaceOpt(size_t W, std::vector<size_t> const& wt, std::vector<size_t> const& val, size_t n) {
+        // Making and initializing dp array
+        std::vector<size_t> dp(W + 1, 0);
+
+        for (int i = 1; i < n + 1; i++) {
+            for (int w = W; w >= 0; w--) {
+
+                if (wt[i - 1] <= w)
+
+                    // Finding the maximum value
+                    dp[w] = max(dp[w],
+                        dp[w - wt[i - 1]] + val[i - 1]);
+            }
+        }
+        // Returning the maximum value of knapsack
+        return dp[W];
+	}
+
+        size_t execute(size_t w, std::vector<size_t> const& wt, std::vector<size_t> const& val, size_t n) {
+            return knapSackSpaceOpt(w, wt, val, n);
         }
     };
 
+	
+
     class Driver : public TestDriverBase {
         virtual bool RunDriver() override {
-            std::vector<int> cost = { 60, 100, 120 };
-            std::vector<int> aff = { 10, 20, 30 };
-            int W = 1000;
-            int n = sizeof(cost) / sizeof(cost[0]);
+            std::vector<size_t> cost = { 60, 100, 120, 220, 200 };
+            std::vector<size_t> aff = { 10, 20, 30, 10, 15};
+            size_t W = 50;
+            size_t n = cost.size();
             Solution sol;
             auto result = sol.execute(W, aff, cost, n);
             std::cout << result;

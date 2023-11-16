@@ -8,6 +8,14 @@ namespace knapsack {
     public:
         size_t max(size_t a, size_t b) { return (a > b) ? a : b; }
 
+    	struct page {
+        public:
+            size_t affinity;
+            size_t budget;
+
+        	page(size_t a, size_t b) : affinity(a), budget(b) {}
+        };
+
         size_t knapSack(size_t W, std::vector<size_t> const& wt, std::vector<size_t> const& val, size_t n)
         {
             size_t i, w;
@@ -29,26 +37,42 @@ namespace knapsack {
             return K[n][W];
         }
 
-        size_t knapSackSpaceOpt(size_t W, std::vector<size_t> const& wt, std::vector<size_t> const& val, size_t n) {
-        // Making and initializing dp array
-        std::vector<size_t> dp(W + 1, 0);
+        size_t knapSackSpaceOpt(size_t budget, std::vector<page> const& data) {
+	        // Making and initializing dp array
+	        std::vector<size_t> dp(budget + 1, 0);
 
-        for (int i = 1; i < n + 1; i++) {
-            for (int w = W; w >= 0; w--) {
+	        for (int i = 1; i < data.size() + 1; i++) {
+	            for (int w = budget; w >= 0; w--) {
 
-                if (wt[i - 1] <= w)
+	                if (data[i - 1].affinity <= w)
 
-                    // Finding the maximum value
-                    dp[w] = max(dp[w],
-                        dp[w - wt[i - 1]] + val[i - 1]);
-            }
+	                    // Finding the maximum value
+	                    dp[w] = max(dp[w],
+	                        dp[w - data[i - 1].affinity] + data[i - 1].budget);
+	            }
+	        }
+	        // Returning the maximum value of knapsack
+	        return dp[budget];
+		}
+
+    	size_t filter(size_t total, std::vector<size_t> const& aff, std::vector<size_t> const& budget) {
+            std::vector<page> data;
+	        for(auto i = 0; i < aff.size(); i++) {
+                data.emplace_back(page(aff[i], budget[i]));
+	        }
+            decltype(data) prim;
+            size_t avg = total / (aff.size() + 1);
+			for(auto i : data) {
+				if(i.budget >= avg) {
+                    i.budget = avg;
+                    prim.emplace_back(i);
+				}
+			}
+            return knapSackSpaceOpt(total - avg, prim);
         }
-        // Returning the maximum value of knapsack
-        return dp[W];
-	}
 
-        size_t execute(size_t w, std::vector<size_t> const& wt, std::vector<size_t> const& val, size_t n) {
-            return knapSackSpaceOpt(w, wt, val, n);
+        size_t execute(size_t total, std::vector<size_t> const& aff, std::vector<size_t> const& budget) {
+            return filter(total, aff, budget);
         }
     };
 
@@ -56,12 +80,11 @@ namespace knapsack {
 
     class Driver : public TestDriverBase {
         virtual bool RunDriver() override {
-            std::vector<size_t> cost = { 60, 100, 120, 220, 200 };
-            std::vector<size_t> aff = { 10, 20, 30, 10, 15};
-            size_t W = 50;
-            size_t n = cost.size();
+            std::vector<size_t> cost = { 600, 100, 200, 800 };
+            std::vector<size_t> aff = { 20, 20, 30, 60 };
+            size_t W = 1000;
             Solution sol;
-            auto result = sol.execute(W, aff, cost, n);
+            auto result = sol.execute(W, aff, cost);
             std::cout << result;
             return true;
         }
